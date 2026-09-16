@@ -1,296 +1,349 @@
- 
- select * from analytics.orders o ;
- 
+SELECT
+	*
+FROM
+	analytics.orders o ;
 -- Question 1: What is the total overall revenue, total number of successful orders, and average order value?
 
-select
-    count(order_id) as total_successful_orders,
-    sum(order_amount) as total_revenue,
-    avg(order_amount)::numeric(10,2) as average_order_value
-from analytics.orders
-where status = 'Succeed';
-
+SELECT
+	count(order_id) AS total_successful_orders,
+	sum(order_amount) AS total_revenue,
+	avg(order_amount)::NUMERIC(10, 2) AS average_order_value
+FROM
+	analytics.orders
+WHERE
+	status = 'Succeed';
 -- Question 2: Which 5 product categories generated the highest total revenue?
 
-select
+SELECT
 	p.category,
-	sum(o.order_amount) as total_revenue
-from analytics.products p 
-left join analytics.orders o 
-	on p.product_id = o.product_id 
-where o.status = 'Succeed'
-group by p.category 
-order by total_revenue desc
-limit 5;
-
+	sum(o.order_amount) AS total_revenue
+FROM
+	analytics.products p
+LEFT JOIN analytics.orders o 
+	ON
+	p.product_id = o.product_id
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	p.category
+ORDER BY
+	total_revenue DESC
+LIMIT 5;
 -- Question 3: What is the gender distribution of our customer base, and how many users are registered per country?
 
-select
+SELECT
 	gender,
-	count(*) as number_of_gender_distribution
-from analytics.customers c 
-group by gender
-order by count(*) desc;
+	count(*) AS number_of_gender_distribution
+FROM
+	analytics.customers c
+GROUP BY
+	gender
+ORDER BY
+	count(*) DESC;
 
-select
+SELECT
 	country,
-	count(customer_id) as number_of_customers
-from analytics.customers c 
-group by country
-order by count(customer_id) desc;
-
-
+	count(customer_id) AS number_of_customers
+FROM
+	analytics.customers c
+GROUP BY
+	country
+ORDER BY
+	count(customer_id) DESC;
 -- Question 4: What is the total revenue and average order value for each payment_method?
 
-select
+SELECT
 	o.payment_method,
-	sum(o.order_amount) as total_revenue,
-	avg(o.order_amount)::numeric(10,2) as average_order_value
-from analytics.orders o
-where o.status = 'Succeed'
-group by o.payment_method;
-
+	sum(o.order_amount) AS total_revenue,
+	avg(o.order_amount)::NUMERIC(10, 2) AS average_order_value
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	o.payment_method;
 -- Question 5: Which payment methods have generated strictly more than $50,000 in total successful revenue?
 
-select 
+SELECT 
 	o.payment_method,
-	sum(o.order_amount) as total_revenue
-from analytics.orders o 
-where o.status = 'Succeed'
-group by o.payment_method
-having sum(o.order_amount) > 50000;
-
+	sum(o.order_amount) AS total_revenue
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	o.payment_method
+HAVING
+	sum(o.order_amount) > 50000;
 -- Question 6: Which product category has the highest number of 'Failed' or 'Refunded' orders?
 
-select 
+SELECT 
 	p.category,
-	count(o.order_id) as total_orders
-from analytics.products p 
-inner join analytics.orders o
-	on p.product_id = o.product_id
-where o.status in ('Failed', 'Refunded')
-group by p.category
-order by total_orders desc;
-
-
+	count(o.order_id) AS total_orders
+FROM
+	analytics.products p
+INNER JOIN analytics.orders o
+	ON
+	p.product_id = o.product_id
+WHERE
+	o.status IN ('Failed', 'Refunded')
+GROUP BY
+	p.category
+ORDER BY
+	total_orders DESC;
 -- Question 7: Do 'Male', 'Female', or 'Other' customers spend more on average per successful order?
 
-select 
+SELECT 
 	c.gender,
-	avg(o.order_amount)::numeric(10,2) as average_order_amount
-from analytics.customers c 
-inner join analytics.orders o 
-	on c.customer_id = o.customer_id 
-where o.status = 'Succeed'
-group by c.gender;
-
-
+	avg(o.order_amount)::NUMERIC(10, 2) AS average_order_amount
+FROM
+	analytics.customers c
+INNER JOIN analytics.orders o 
+	ON
+	c.customer_id = o.customer_id
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	c.gender;
 -- Question 8: How many registered customers have never placed an order?
 
-select
-	count(c.customer_id) as never_placed_order
-from analytics.customers c 
-left join analytics.orders o 
-	on c.customer_id = o.customer_id 
-where o.order_id is null;
-
-
+SELECT
+	count(c.customer_id) AS never_placed_order
+FROM
+	analytics.customers c
+LEFT JOIN analytics.orders o 
+	ON
+	c.customer_id = o.customer_id
+WHERE
+	o.order_id IS NULL;
 -- Question 9: Give me the first_name, last_name, and total orders of any customer who has placed 3 or more successful orders.
 
-select
+SELECT
 	c.first_name,
 	c.last_name,
-	count(o.order_id) as total_orders
-from analytics.customers c 
-inner join analytics.orders o 
-	on c.customer_id = o.customer_id
-where o.status = 'Succeed'
-group by c.customer_id, c.first_name, c.last_name
-having count(o.order_id) >= 3;
-
-
+	count(o.order_id) AS total_orders
+FROM
+	analytics.customers c
+INNER JOIN analytics.orders o 
+	ON
+	c.customer_id = o.customer_id
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	c.customer_id,
+	c.first_name,
+	c.last_name
+HAVING
+	count(o.order_id) >= 3;
 -- Question 10: Which 5 specific products (by product_name, not category) have sold the lowest total quantity?
 
-select
+SELECT
 	p.product_name,
-	sum(o.quantity) as total_quantity_sold
-from analytics.products p 
-inner join analytics.orders o 
-	on p.product_id = o.product_id
-where o.status = 'Succeed'
-group by p.product_id, p.product_name
-order by sum(o.quantity ) asc 
-limit 5;
-
-
+	sum(o.quantity) AS total_quantity_sold
+FROM
+	analytics.products p
+INNER JOIN analytics.orders o 
+	ON
+	p.product_id = o.product_id
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	p.product_id,
+	p.product_name
+ORDER BY
+	sum(o.quantity) ASC
+LIMIT 5;
 -- Question 11: Which 5 customer countries generate the highest volume of support tickets?
 
-select 
+SELECT 
 	c.country,
-	count(st.ticket_id) as volume_of_tickets
-from analytics.customers c 
-inner join analytics.support_tickets st 
-	on c.customer_id = st.customer_id 
-group by c.country 
-order by count(st.ticket_id) desc
-limit 5;
-
-
+	count(st.ticket_id) AS volume_of_tickets
+FROM
+	analytics.customers c
+INNER JOIN analytics.support_tickets st 
+	ON
+	c.customer_id = st.customer_id
+GROUP BY
+	c.country
+ORDER BY
+	count(st.ticket_id) DESC
+LIMIT 5;
 -- Question 12: Which support_agents have handled more than 50 tickets that resulted in a 'Negative' sentiment?
 
-select 
+SELECT 
 	st.support_agent,
-	count(*) as number_of_tickets
-from analytics.support_tickets st 
-where st.sentiment = 'Negative'
-group by st.support_agent
-having count(*) > 50;
-
+	count(*) AS number_of_tickets
+FROM
+	analytics.support_tickets st
+WHERE
+	st.sentiment = 'Negative'
+GROUP BY
+	st.support_agent
+HAVING
+	count(*) > 50;
 -- Question 13: What is the average resolution time (in hours) for each support issue_type?
 
-select 
+SELECT 
 	st.issue_type,
-	avg(st.resolution_time_hours::numeric(10,2)) as average_resolution_time
-from analytics.support_tickets st 
-group by st.issue_type ;
-
-
+	avg(st.resolution_time_hours::NUMERIC(10, 2)) AS average_resolution_time
+FROM
+	analytics.support_tickets st
+GROUP BY
+	st.issue_type ;
 -- Question 14: What are the top 5 most frequently visited page_urls in our clickstream data?
 
-select
+SELECT
 	page_url,
-	count(*) as visits
-from analytics.clickstream c 
---where page_url is not null
-group by page_url
-order by count(*) desc 
-limit 5;
-
-
+	count(*) AS visits
+FROM
+	analytics.clickstream c
+	--where page_url is not null
+GROUP BY
+	page_url
+ORDER BY
+	count(*) DESC
+LIMIT 5;
 -- Question 15: How many clickstream events were generated by known, logged-in customers versus anonymous guest users?
 
-select 
-	case
-		when customer_id is null then 'Guest User'
-		else 'Registered User'
-	end as user_type,
-	count(event_id) as total_events
-from analytics.clickstream c
-group by 
-	case
-		when customer_id is null  then 'Guest User'
-		else 'Registered User'
-	end;
-
-
+SELECT 
+	CASE
+		WHEN customer_id IS NULL THEN 'Guest User'
+		ELSE 'Registered User'
+	END AS user_type,
+	count(event_id) AS total_events
+FROM
+	analytics.clickstream c
+GROUP BY 
+	CASE
+		WHEN customer_id IS NULL THEN 'Guest User'
+		ELSE 'Registered User'
+	END;
 -- Question 16: What is the distribution of our customers by their lifetime value?
 
-with CustomerOrderAmount as
+WITH CustomerOrderAmount AS
 (
-	select
+SELECT
 		o.customer_id,
-		sum(order_amount) as total_amount
-	from analytics.orders o
-	where o.status = 'Succeed'
-	group by o.customer_id
+		sum(order_amount) AS total_amount
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	o.customer_id
 )
-select 
-	case 
-		when coa.total_amount < 10000 then 'Low Valued'
-		when coa.total_amount < 25000 then 'Medium Valued'
-		when coa.total_amount < 50000 then 'High Value'
-		else 'Loyal Valued'
-	end as customer_category,
-	count(customer_id) as customer_distribution
-from CustomerOrderAmount coa
-group by
-	case 
-		when coa.total_amount < 10000 then 'Low Valued'
-		when coa.total_amount < 25000 then 'Medium Valued'
-		when coa.total_amount < 50000 then 'High Value'
-		else 'Loyal Valued'
-	end
-order by customer_distribution desc;
-
-
+SELECT 
+	CASE 
+		WHEN coa.total_amount < 10000 THEN 'Low Valued'
+		WHEN coa.total_amount < 25000 THEN 'Medium Valued'
+		WHEN coa.total_amount < 50000 THEN 'High Value'
+		ELSE 'Loyal Valued'
+	END AS customer_category,
+	count(customer_id) AS customer_distribution
+FROM
+	CustomerOrderAmount coa
+GROUP BY
+	CASE 
+		WHEN coa.total_amount < 10000 THEN 'Low Valued'
+		WHEN coa.total_amount < 25000 THEN 'Medium Valued'
+		WHEN coa.total_amount < 50000 THEN 'High Value'
+		ELSE 'Loyal Valued'
+	END
+ORDER BY
+	customer_distribution DESC;
 -- Question 17: How many customers have only ever placed exactly 1 successful order (One-Time Buyer), versus customers who have placed 2 or more (Repeat Buyer)?
 
-with BuyerCustomer as
+WITH BuyerCustomer AS
 (
-	select
+SELECT
 		o.customer_id,
-		count(o.order_id) as total_customer_buy_count
-	from analytics.orders o
-	where o.status = 'Succeed'
-	group by o.customer_id
+		count(o.order_id) AS total_customer_buy_count
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	o.customer_id
 )
-select
-	case 
-		when bc.total_customer_buy_count = 1 then 'One-Time Buyer'
-		when bc.total_customer_buy_count >= 2 then 'Repeat Buyer'
-	end as buyer_type,
-	count(*) as number_of_buyers
-from BuyerCustomer bc
-group by 
-	case 
-		when bc.total_customer_buy_count = 1 then 'One-Time Buyer'
-		when bc.total_customer_buy_count >= 2 then 'Repeat Buyer'
-	end;
-
-
+SELECT
+	CASE 
+		WHEN bc.total_customer_buy_count = 1 THEN 'One-Time Buyer'
+		WHEN bc.total_customer_buy_count >= 2 THEN 'Repeat Buyer'
+	END AS buyer_type,
+	count(*) AS number_of_buyers
+FROM
+	BuyerCustomer bc
+GROUP BY 
+	CASE 
+		WHEN bc.total_customer_buy_count = 1 THEN 'One-Time Buyer'
+		WHEN bc.total_customer_buy_count >= 2 THEN 'Repeat Buyer'
+	END;
 -- Question 18: Which support agents have an average resolution time strictly faster (lower) than the overall company average?
 
-with SupportAgentTime as
+WITH SupportAgentTime AS
 (
-select
+SELECT
 	st.support_agent,
-	avg(resolution_time_hours) as average_resolution_time_hours
-from analytics.support_tickets st
-group by st.support_agent
+	avg(resolution_time_hours) AS average_resolution_time_hours
+FROM
+	analytics.support_tickets st
+GROUP BY
+	st.support_agent
 )
-select
+SELECT
 	sat.support_agent,
 	sat.average_resolution_time_hours
-from SupportAgentTime sat
-where sat.average_resolution_time_hours < (
-	select
+FROM
+	SupportAgentTime sat
+WHERE
+	sat.average_resolution_time_hours < (
+	SELECT
 		avg(resolution_time_hours)
-	from analytics.support_tickets st 
+	FROM
+		analytics.support_tickets st 
 );
-
-
 -- Question 19: Find the first_name, last_name, total spend, and total negative tickets for customers who have spent more than $5000 but have submitted at least one 'Negative' support ticket.
 
-with CustomerRevenue as 
+WITH CustomerRevenue AS 
 (
-	select
+SELECT
 		customer_id,
-		sum(o.order_amount) as total_spend
-	from analytics.orders o
-	where o.status = 'Succeed'
-	group by customer_id
+		sum(o.order_amount) AS total_spend
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	customer_id
 ),
-CustomerSupport as
+CustomerSupport AS
 (
-	select
+SELECT
 		st.customer_id,
-		count(st.customer_id) as total_negative_tickets
-	from analytics.support_tickets st 
-	where st.sentiment = 'Negative'
-	group by st.customer_id
+		count(st.customer_id) AS total_negative_tickets
+FROM
+	analytics.support_tickets st
+WHERE
+	st.sentiment = 'Negative'
+GROUP BY
+	st.customer_id
 )
-select
+SELECT
 	c.first_name,
 	c.last_name,
 	cr.total_spend,
 	cs.total_negative_tickets
-from analytics.customers c 
-inner join CustomerRevenue cr
-	on c.customer_id = cr.customer_id 
-inner join CustomerSupport cs
-	on cr.customer_id = cs.customer_id
-where cr.total_spend > 5000 and cs.total_negative_tickets > 0;
-
+FROM
+	analytics.customers c
+INNER JOIN CustomerRevenue cr
+	ON
+	c.customer_id = cr.customer_id
+INNER JOIN CustomerSupport cs
+	ON
+	cr.customer_id = cs.customer_id
+WHERE
+	cr.total_spend > 5000
+	AND cs.total_negative_tickets > 0;
 
 /* Question 20: Retrieve the first_name, last_name, total_web_events, total_lifetime_spend, and average_resolution_time for customers who meet all of the following criteria:
 They have more than 10 total clickstream events.
@@ -298,198 +351,302 @@ They have spent more than $1000 in successful orders.
 Their average support ticket resolution time is strictly greater than 24 hours.
 */
 
-with LifetimeSpend as
+WITH LifetimeSpend AS
 (
-	select o.customer_id, sum(o.order_amount) as total_lifetime_spend
-	from analytics.orders o 
-	where o.status = 'Succeed'
-	group by o.customer_id 
+SELECT
+	o.customer_id,
+	sum(o.order_amount) AS total_lifetime_spend
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	o.customer_id 
 ),
-WebEngagement as
+WebEngagement AS
 (
-	select cs.customer_id, count(cs.event_id) as total_clickstream
-	from analytics.clickstream cs
-	group by cs.customer_id 
+SELECT
+	cs.customer_id,
+	count(cs.event_id) AS total_clickstream
+FROM
+	analytics.clickstream cs
+GROUP BY
+	cs.customer_id 
 ),
-SupportExperience as
+SupportExperience AS
 (
-	select st.customer_id, avg(st.resolution_time_hours) as resolution_time
-	from analytics.support_tickets st 
-	group by st.customer_id 
+SELECT
+	st.customer_id,
+	avg(st.resolution_time_hours) AS resolution_time
+FROM
+	analytics.support_tickets st
+GROUP BY
+	st.customer_id 
 )
-select c.customer_id, c.first_name, c.last_name, ls.total_lifetime_spend, we.total_clickstream, se.resolution_time 
-from analytics.customers c 
-inner join LifetimeSpend ls
-	on c.customer_id =ls.customer_id 
-inner join WebEngagement we
-	on c.customer_id = we.customer_id 
-inner join SupportExperience se
-	on c.customer_id = se.customer_id 
-where we.total_clickstream > 10
-	and ls.total_lifetime_spend > 10000
-	and se.resolution_time > 24;
-
-
+SELECT
+	c.customer_id,
+	c.first_name,
+	c.last_name,
+	ls.total_lifetime_spend,
+	we.total_clickstream,
+	se.resolution_time
+FROM
+	analytics.customers c
+INNER JOIN LifetimeSpend ls
+	ON
+	c.customer_id = ls.customer_id
+INNER JOIN WebEngagement we
+	ON
+	c.customer_id = we.customer_id
+INNER JOIN SupportExperience se
+	ON
+	c.customer_id = se.customer_id
+WHERE
+	we.total_clickstream > 10
+	AND ls.total_lifetime_spend > 10000
+	AND se.resolution_time > 24;
 -- Question 21: Find the customer_id, order_id, and order_amount of every customer's very first successful order.
 
-with CustomerDetails as
+WITH CustomerDetails AS
 (
-	select o.customer_id, o.order_id, o.order_amount,
-	row_number() over(partition by o.customer_id order by o.order_date ASC) as ranking
-	from analytics.orders o 
-	where o.status = 'Succeed'
+SELECT
+	o.customer_id,
+	o.order_id,
+	o.order_amount,
+	ROW_NUMBER() OVER(PARTITION BY o.customer_id ORDER BY o.order_date ASC) AS ranking
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
 )
-select
+SELECT
 	*
-from CustomerDetails
-where ranking = 1;
-
-
+FROM
+	CustomerDetails
+WHERE
+	ranking = 1;
 -- Question 22: Create a chronological running total of all successful revenue across the entire company, sorted by order_date.
 
-select 
+SELECT 
 	o.order_id,
 	o.customer_id,
 	o.order_amount,
 	o.order_date,
-	sum(o.order_amount) over(order by o.order_date asc) as running_total
-from analytics.orders o
-where o.status = 'Succeed';
-
+	sum(o.order_amount) OVER(ORDER BY o.order_date ASC) AS running_total
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed';
 
 /* Question 23: The marketing team wants to know how long it takes customers to reorder.
 Find the customer_id, order_date, and calculate the number of days between each successful order and that exact customer's previous successful order.
 */
 
-select customer_id, order_date, order_amount,
-extract(day from (o.order_date- lag(o.order_date) over(partition by customer_id order by order_date))) as difference_in_date
-from analytics.orders o 
-where o.status = 'Succeed';
-
+SELECT
+	customer_id,
+	order_date,
+	order_amount,
+	EXTRACT(DAY FROM (o.order_date- LAG(o.order_date) OVER(PARTITION BY customer_id ORDER BY order_date))) AS difference_in_date
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed';
 
 /* Question 24: Country managers need to reward their best local buyers.
 Find the top 3 highest-spending customers in each country. Return the country, customer_id, and their regional rank.
 */
 
-with HighestSpendingCustomer as
+WITH HighestSpendingCustomer AS
 (
-	select
+SELECT
 		c.customer_id,
 		c.country,
-		sum(o.order_amount) as total_customer_spend,
-		dense_rank() over(partition by c.country order by sum(o.order_amount) desc) as ranking
-	from analytics.orders o 
-	inner join analytics.customers c
-		on o.customer_id = c.customer_id
-	where o.status = 'Succeed'
-		and o.order_amount is not null
-	group by c.customer_id, c.country
+		sum(o.order_amount) AS total_customer_spend,
+		DENSE_RANK() OVER(PARTITION BY c.country ORDER BY sum(o.order_amount) DESC) AS ranking
+FROM
+	analytics.orders o
+INNER JOIN analytics.customers c
+		ON
+	o.customer_id = c.customer_id
+WHERE
+	o.status = 'Succeed'
+	AND o.order_amount IS NOT NULL
+GROUP BY
+	c.customer_id,
+	c.country
 )
-select
-	*	
-from HighestSpendingCustomer hsc
-where ranking <=3;
-
-
+SELECT
+	*
+FROM
+	HighestSpendingCustomer hsc
+WHERE
+	ranking <= 3;
 -- Question 25: Calculate a 3-ticket moving average of resolution_time_hours for each support_agent, sorted chronologically by the ticket date.
 
-select 
+SELECT 
 	st.support_agent,
 	ticket_created,
 	avg(resolution_time_hours)
-	over(partition by support_agent 
-		order by ticket_created
-		rows between 2 preceding and current row) as average_resolution_time_hours
-from analytics.support_tickets st;
-
-
+	OVER(PARTITION BY support_agent 
+		ORDER BY ticket_created
+		ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS average_resolution_time_hours
+FROM
+	analytics.support_tickets st;
 -- Question 26: The executive team wants to divide all customers into 4 equal tiers (Quartiles) based on their lifetime successful spend to define our new VIP program.
 
-with CustomerLifeTimeSpend as (
-    select 
-        c.customer_id,
-        c.country,
-        sum(o.order_amount) as total_spend
-    from 
-        analytics.orders o
-    inner join 
-        analytics.customers c on o.customer_id = c.customer_id
-    where 
-        o.status = 'Succeed' 
-        and o.order_amount is not null
-    group by 
-        c.customer_id, 
-        c.country
+WITH CustomerLifeTimeSpend AS (
+SELECT
+	c.customer_id,
+	c.country,
+	sum(o.order_amount) AS total_spend
+FROM
+	analytics.orders o
+INNER JOIN 
+        analytics.customers c ON
+	o.customer_id = c.customer_id
+WHERE
+	o.status = 'Succeed'
+	AND o.order_amount IS NOT NULL
+GROUP BY
+	c.customer_id,
+	c.country
 )
-select 
-    customer_id,
-    country,
-    total_spend,
-    ntile(4) over (order by total_spend desc) as quartile_tier
-from 
-    CustomerLifeTimeSpend
-order by 
-    quartile_tier asc, 
-    total_spend desc;
-
+SELECT
+	customer_id,
+	country,
+	total_spend,
+	NTILE(4) OVER (
+ORDER BY
+	total_spend DESC) AS quartile_tier
+FROM
+	CustomerLifeTimeSpend
+ORDER BY
+	quartile_tier ASC,
+	total_spend DESC;
 
 /*
 Question 27: The executive team needs to see if company revenue is trending up or down.
 Calculate the total successful revenue for each month, the revenue from the previous month, and the Month-over-Month growth percentage.
 */
 
-with MonthlyRevenue as (
-	select
-		date_trunc('month', o.order_date) as order_month,
-		sum(order_amount) as current_total_revenue
-	from analytics.orders o
-	where o.status = 'Succeed'
-	group by date_trunc('month', o.order_date)
+WITH MonthlyRevenue AS (
+SELECT
+		date_trunc('month', o.order_date) AS order_month,
+		sum(order_amount) AS current_total_revenue
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
+GROUP BY
+	date_trunc('month', o.order_date)
 ),
-PreviousMonthlyRevenue as (
-	select
+PreviousMonthlyRevenue AS (
+SELECT
 		order_month,
 		current_total_revenue,
-		lag(current_total_revenue, 1) over(order by order_month asc) as previous_total_revenue
-	from MonthlyRevenue
+		LAG(current_total_revenue, 1) OVER(ORDER BY order_month ASC) AS previous_total_revenue
+FROM
+	MonthlyRevenue
 )
-select
+SELECT
 	order_month,
 	current_total_revenue,
 	previous_total_revenue,
-	round(((current_total_revenue - previous_total_revenue)/previous_total_revenue * 100)::numeric, 2) as mom_percentage
-from PreviousMonthlyRevenue
-order by order_month asc;
-
+	round(((current_total_revenue - previous_total_revenue)/ previous_total_revenue * 100)::NUMERIC, 2) AS mom_percentage
+FROM
+	PreviousMonthlyRevenue
+ORDER BY
+	order_month ASC;
 
 /*
 Question 28: The gamification team wants to reward users who make purchases on 3 or more consecutive days.
 Find the customer_id, the start date of their streak, the end date of their streak, and the total consecutive days they made a purchase (must be >= 3).
 */
 
-select * from analytics.orders o ;
+SELECT
+	*
+FROM
+	analytics.orders o ;
 
-with CustomerOrderDate as (
-	select distinct
+WITH CustomerOrderDate AS (
+SELECT
+	DISTINCT
 		customer_id,
-		cast(order_date as date) as order_date
-	from analytics.orders o
-	where o.status = 'Succeed'
+		CAST(order_date AS date) AS order_date
+FROM
+	analytics.orders o
+WHERE
+	o.status = 'Succeed'
 ),
-Customer_Streak as (
-	select
+Customer_Streak AS (
+SELECT
 		customer_id,
 		order_date,
-		order_date - cast(dense_rank() over(partition by customer_id order by order_date) as int) as streak_id
-	from CustomerOrderDate
+		order_date - CAST(DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date) AS int) AS streak_id
+FROM
+	CustomerOrderDate
 )
-select
+SELECT
 	customer_id,
---	streak_id,
-	min(order_date) as streak_start,
-	max(order_date) as streak_end,
-	count(*) as total_consecutive_days
-from Customer_Streak
-group by customer_id, streak_id
-having count(*) >= 2
-order by total_consecutive_days desc;
+	--	streak_id,
+	min(order_date) AS streak_start,
+	max(order_date) AS streak_end,
+	count(*) AS total_consecutive_days
+FROM
+	Customer_Streak
+GROUP BY
+	customer_id,
+	streak_id
+HAVING
+	count(*) >= 2
+ORDER BY
+	total_consecutive_days DESC;
+
+/*
+Question 29: The web team wants to group user clicks into "Browsing Sessions."
+A new session begins if a user is inactive for more than 30 minutes.
+Find the customer_id, event_timestamp, and calculate the time difference in minutes between each event and the user's previous event.
+*/
+
+
+SELECT
+	customer_id,
+	event_type,
+	timestamps AS event_timestamp,
+	LAG(timestamps) OVER(PARTITION BY customer_id ORDER BY timestamps ASC) AS previous_timestamp,
+	ROUND(
+		(EXTRACT(EPOCH FROM (timestamps - LAG(timestamps) OVER(PARTITION BY customer_id ORDER BY timestamps ASC)))/ 60)::NUMERIC, 2) AS inactivity_differences
+FROM
+	analytics.clickstream c ;
+
+/*
+Question 30: We are going to wrap your exact query into a CTE and use it to generate a unique Session ID for every single click.
+*/
+
+WITH TimeGaps AS (
+SELECT
+		customer_id,
+		event_type,
+		timestamps AS event_timestamp,
+		LAG(timestamps) OVER(PARTITION BY customer_id ORDER BY timestamps ASC) AS previous_timestamp,
+		ROUND(
+			(EXTRACT(EPOCH FROM (timestamps - LAG(timestamps) OVER(PARTITION BY customer_id ORDER BY timestamps ASC)))/ 60)::NUMERIC, 2) AS inactivity_differences
+FROM
+		analytics.clickstream c
+),
+SessionFlags AS (
+SELECT 
+		*,
+		CASE
+			WHEN inactivity_differences > 60
+			OR inactivity_differences IS NULL THEN 1
+			ELSE 0
+		END AS is_new_session
+	FROM
+		TimeGaps
+)
+SELECT
+	*,
+	SUM(is_new_session) OVER(PARTITION BY customer_id ORDER BY event_timestamp ASC) AS session_id
+FROM
+	SessionFlags;
